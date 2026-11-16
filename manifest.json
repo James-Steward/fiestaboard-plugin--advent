@@ -1,0 +1,281 @@
+{
+  "id": "advent",
+  "name": "Christmas Advent Tree",
+  "version": "1.0.0",
+  "description": "A pixel-art Christmas tree that gains a bauble every day of December, with a countdown in sleeps to Christmas. Fully offline, no API key.",
+  "author": "James Steward",
+  "repository": "https://github.com/James-Steward/fiestaboard-plugin--advent",
+  "documentation": "README.md",
+  "icon": "gift",
+  "category": "utility",
+  "min_refresh_seconds": 60,
+  "settings_schema": {
+    "type": "object",
+    "properties": {
+      "enabled": {
+        "type": "boolean",
+        "title": "Enabled",
+        "default": false
+      },
+      "board": {
+        "type": "string",
+        "title": "Board Size",
+        "description": "Which display the tree is drawn for. A Flagship gets one bauble every day; a Note's smaller tree gets one every two or three days.",
+        "enum": [
+          "note",
+          "flagship"
+        ],
+        "default": "note"
+      },
+      "countdown_style": {
+        "type": "string",
+        "title": "Countdown Style",
+        "description": "Count down in 'sleeps' or 'days'.",
+        "enum": [
+          "sleeps",
+          "days"
+        ],
+        "default": "sleeps"
+      },
+      "twinkle": {
+        "type": "boolean",
+        "title": "Twinkle",
+        "description": "Shuffle the bauble colours at every refresh so the tree twinkles. Makes the board flip more often.",
+        "default": false
+      },
+      "timezone": {
+        "type": "string",
+        "title": "Timezone",
+        "description": "Decides when a new day (and a new bauble) starts.",
+        "ui:widget": "timezone",
+        "default": "Australia/Sydney"
+      },
+      "demo_day": {
+        "type": "integer",
+        "title": "Preview Day",
+        "description": "Pretend it is this day of December (1-31) to preview the tree. 0 uses the real date.",
+        "default": 0,
+        "minimum": 0,
+        "maximum": 31
+      },
+      "refresh_seconds": {
+        "type": "integer",
+        "title": "Refresh Interval (seconds)",
+        "description": "How often FiestaBoard asks this plugin for data. The tree only changes once a day unless Twinkle is on.",
+        "default": 300,
+        "minimum": 60,
+        "maximum": 86400
+      }
+    },
+    "required": []
+  },
+  "env_vars": [
+    {
+      "name": "ADVENT_TIMEZONE",
+      "required": false,
+      "description": "Timezone override (can also be set in the web UI)."
+    }
+  ],
+  "variables": {
+    "groups": {
+      "advent": {
+        "label": "Advent"
+      },
+      "display": {
+        "label": "Display"
+      }
+    },
+    "simple": {
+      "phase": {
+        "description": "Where in the season it is: PRE, ADVENT, XMAS, HOLS (26-31 Dec) or NEWYEAR (1-6 Jan)",
+        "type": "string",
+        "max_length": 7,
+        "group": "advent",
+        "example": "ADVENT"
+      },
+      "door": {
+        "description": "Today's advent door, 1-24 (0 outside advent)",
+        "type": "number",
+        "max_length": 2,
+        "group": "advent",
+        "example": "7"
+      },
+      "sleeps": {
+        "description": "Sleeps (days) until Christmas Day, 0 on and after Christmas",
+        "type": "number",
+        "max_length": 2,
+        "group": "advent",
+        "example": "18"
+      },
+      "days_to_advent": {
+        "description": "Days until 1 December, before advent starts",
+        "type": "number",
+        "max_length": 3,
+        "group": "advent",
+        "example": "16"
+      },
+      "count_label": {
+        "description": "SLEEP/SLEEPS or DAY/DAYS to go with the count",
+        "type": "string",
+        "max_length": 6,
+        "group": "advent",
+        "example": "SLEEPS"
+      },
+      "headline": {
+        "description": "One-line summary that fits a Flagship row",
+        "type": "string",
+        "max_length": 22,
+        "group": "advent",
+        "example": "18 SLEEPS TO XMAS"
+      },
+      "updated": {
+        "description": "Local time this data was last refreshed, 24-hour",
+        "type": "string",
+        "max_length": 5,
+        "group": "display",
+        "example": "21:49"
+      },
+      "line1": {
+        "description": "Pre-built board row 1 with the tree in colour tiles (characters, not tiles: each {NN} colour code is 4 characters but 1 tile)",
+        "type": "string",
+        "max_length": 88,
+        "group": "display",
+        "example": "     {66}{66}{66}"
+      },
+      "line2": {
+        "description": "Pre-built board row 2 with the tree in colour tiles (characters, not tiles: each {NN} colour code is 4 characters but 1 tile)",
+        "type": "string",
+        "max_length": 88,
+        "group": "display",
+        "example": "    {69}{66}{66}{66}{68}        18"
+      },
+      "line3": {
+        "description": "Pre-built board row 3 with the tree in colour tiles (characters, not tiles: each {NN} colour code is 4 characters but 1 tile)",
+        "type": "string",
+        "max_length": 88,
+        "group": "display",
+        "example": "   {66}{66}{66}{66}{66}{66}{66}     SLEEPS"
+      },
+      "line4": {
+        "description": "Pre-built board row 4 with the tree in colour tiles (Flagship only; blank on a Note) (characters, not tiles: each {NN} colour code is 4 characters but 1 tile)",
+        "type": "string",
+        "max_length": 88,
+        "group": "display",
+        "example": "  {64}{66}{66}{66}{63}{66}{66}{66}{63}   TO XMAS"
+      },
+      "line5": {
+        "description": "Pre-built board row 5 with the tree in colour tiles (Flagship only; blank on a Note) (characters, not tiles: each {NN} colour code is 4 characters but 1 tile)",
+        "type": "string",
+        "max_length": 88,
+        "group": "display",
+        "example": " {66}{66}{66}{66}{66}{66}{66}{66}{66}{66}{66}"
+      },
+      "line6": {
+        "description": "Pre-built board row 6 with the tree in colour tiles (Flagship only; blank on a Note) (characters, not tiles: each {NN} colour code is 4 characters but 1 tile)",
+        "type": "string",
+        "max_length": 88,
+        "group": "display",
+        "example": "{65}{66}{66}{66}{66}{66}{66}{66}{66}{66}{66}{66}{67}"
+      }
+    }
+  },
+  "max_lengths": {},
+  "fiestaboard_version": ">=2.10.0",
+  "teaser": "{66}{63}{66} 18 SLEEPS",
+  "previews": [
+    {
+      "device_type": "flagship",
+      "rows": [
+        "     {66}{66}{66}",
+        "    {69}{66}{66}{66}{68}        18",
+        "   {66}{66}{66}{66}{66}{66}{66}     SLEEPS",
+        "  {64}{66}{66}{66}{63}{66}{66}{66}{63}   TO XMAS",
+        " {66}{66}{66}{66}{66}{66}{66}{66}{66}{66}{66}",
+        "{65}{66}{66}{66}{66}{66}{66}{66}{66}{66}{66}{66}{67}"
+      ]
+    },
+    {
+      "device_type": "note",
+      "rows": [
+        "  {66}{66}{66}      18",
+        " {66}{66}{63}{66}{66}   SLEEPS",
+        "{65}{66}{66}{66}{66}{66}{67} TO XMAS"
+      ]
+    }
+  ],
+  "demo": {
+    "flagship": {
+      "name": "Advent Tree",
+      "template": [
+        "{{advent.line1}}",
+        "{{advent.line2}}",
+        "{{advent.line3}}",
+        "{{advent.line4}}",
+        "{{advent.line5}}",
+        "{{advent.line6}}"
+      ],
+      "line_metadata": [
+        {
+          "alignment": "left",
+          "wrap": false
+        },
+        {
+          "alignment": "left",
+          "wrap": false
+        },
+        {
+          "alignment": "left",
+          "wrap": false
+        },
+        {
+          "alignment": "left",
+          "wrap": false
+        },
+        {
+          "alignment": "left",
+          "wrap": false
+        },
+        {
+          "alignment": "left",
+          "wrap": false
+        }
+      ]
+    },
+    "note": {
+      "name": "Advent Tree (Note)",
+      "template": [
+        "{{advent.line1}}",
+        "{{advent.line2}}",
+        "{{advent.line3}}"
+      ],
+      "line_metadata": [
+        {
+          "alignment": "left",
+          "wrap": false
+        },
+        {
+          "alignment": "left",
+          "wrap": false
+        },
+        {
+          "alignment": "left",
+          "wrap": false
+        }
+      ]
+    }
+  },
+  "screenshots": [
+    {
+      "src": "docs/flagship-display.png",
+      "alt": "Pixel-art Christmas tree with baubles on a Vestaboard Flagship",
+      "caption": "One more bauble every day of December, with a countdown in sleeps",
+      "primary": true
+    },
+    {
+      "src": "docs/note-display.png",
+      "alt": "Christmas tree countdown on a Vestaboard Note",
+      "caption": "A smaller tree for the Note",
+      "primary": false
+    }
+  ]
+}
